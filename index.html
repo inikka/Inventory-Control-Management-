@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Inventory Control System | MySQL</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem;
+        }
+
+        /* Login Modal / Page Container */
+        .login-container, .app-container {
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .login-card {
+            max-width: 420px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.98);
+            border-radius: 2rem;
+            padding: 2rem 2rem 2.2rem;
+            box-shadow: 0 25px 45px rgba(0,0,0,0.3);
+            backdrop-filter: blur(2px);
+            text-align: center;
+        }
+
+        .login-card h2 {
+            font-size: 1.9rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #1E3C72, #2A5298);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-card p {
+            color: #5a6e7c;
+            margin-bottom: 1.8rem;
+            font-size: 0.9rem;
+        }
+
+        .input-group {
+            margin-bottom: 1.2rem;
+            text-align: left;
+        }
+
+        .input-group label {
+            font-weight: 600;
+            color: #1f3a5f;
+            display: block;
+            margin-bottom: 0.4rem;
+            font-size: 0.85rem;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 0.8rem 1rem;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 1rem;
+            font-size: 0.95rem;
+            transition: 0.2s;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #2A5298;
+            box-shadow: 0 0 0 3px rgba(42,82,152,0.2);
+        }
+
+        .login-btn {
+            width: 100%;
+            background: #2A5298;
+            color: white;
+            border: none;
+            padding: 0.8rem;
+            border-radius: 2rem;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            margin-top: 0.5rem;
+            transition: 0.2s;
+        }
+
+        .login-btn:hover {
+            background: #1e3c72;
+            transform: translateY(-2px);
+        }
+
+        .error-msg {
+            color: #c0392b;
+            font-size: 0.8rem;
+            margin-top: 1rem;
+            background: #ffe6e5;
+            padding: 0.5rem;
+            border-radius: 2rem;
+        }
+
+        /* MAIN APP STYLES (after login) */
+        .app-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255,255,255,0.92);
+            backdrop-filter: blur(2px);
+            border-radius: 2rem;
+            box-shadow: 0 20px 35px -12px rgba(0,0,0,0.3);
+            overflow: hidden;
+            padding: 1.8rem 2rem;
+        }
+
+        .app-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #1E3C72, #2A5298);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .sub {
+            color: #2c3e66;
+            border-left: 4px solid #2A5298;
+            padding-left: 1rem;
+            margin: 0.3rem 0 1rem 0;
+            font-weight: 500;
+        }
+
+        .user-info {
+            background: #1e2a3a;
+            border-radius: 60px;
+            padding: 0.5rem 1.2rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: white;
+        }
+
+        .logout-btn {
+            background: #c0392b;
+            padding: 0.3rem 1rem;
+            border-radius: 30px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            border: none;
+            color: white;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.4fr;
+            gap: 2rem;
+            margin-top: 1rem;
+        }
+
+        .card {
+            background: white;
+            border-radius: 1.5rem;
+            padding: 1.5rem;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.05);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        .card h2 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            border-bottom: 2px solid #eef2f7;
+            padding-bottom: 0.6rem;
+            color: #1e2f4e;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        label {
+            font-weight: 600;
+            color: #1f3a5f;
+            display: block;
+            margin-bottom: 0.3rem;
+            font-size: 0.85rem;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 0.7rem 1rem;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 1rem;
+            font-size: 0.9rem;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #2A5298;
+        }
+
+        button {
+            background: #2A5298;
+            color: white;
+            border: none;
+            padding: 0.7rem 1.4rem;
+            border-radius: 2rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .btn-secondary {
+            background: #3b5e7e;
+        }
+
+        .btn-danger {
+            background: #c0392b;
+        }
+
+        .btn-sm {
+            padding: 0.4rem 1rem;
+            font-size: 0.8rem;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 1rem;
+            margin-top: 1rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        th {
+            background: #f1f5f9;
+            padding: 0.8rem 0.5rem;
+            text-align: left;
+            color: #1e293b;
+        }
+
+        td {
+            padding: 0.7rem 0.5rem;
+            border-bottom: 1px solid #eef2f8;
+        }
+
+        .action-icons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .edit-btn, .delete-btn {
+            background: none;
+            border: none;
+            font-size: 1rem;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 30px;
+        }
+
+        .edit-btn { color: #2c6e9e; background: #eef3fc; }
+        .delete-btn { color: #c0392b; background: #fee9e7; }
+
+        .stock-badge {
+            font-weight: 700;
+            background: #e9f4e8;
+            padding: 0.2rem 0.7rem;
+            border-radius: 30px;
+            display: inline-block;
+        }
+
+        .low-stock {
+            background: #fff0e0;
+            color: #d35400;
+        }
+
+        .total-summary {
+            margin-top: 1rem;
+            background: #f8fafc;
+            padding: 0.8rem;
+            border-radius: 1rem;
+            display: flex;
+            justify-content: space-between;
+            font-weight: 500;
+        }
+
+        .message {
+            margin: 1rem 0 0;
+            padding: 0.5rem;
+            border-radius: 40px;
+            text-align: center;
+            font-size: 0.85rem;
+        }
+
+        .success { background: #dff9e6; color: #2e6b3e; }
+        .error { background: #ffe6e5; color: #b13b2d; }
+
+        @media (max-width: 800px) {
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .app-container { padding: 1rem; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- LOGIN SECTION -->
+<div id="loginSection" class="login-container">
+    <div class="login-card">
+        <h2>🔐 Inventory Control</h2>
+        <p>MySQL powered system | Secure Access</p>
+        <form id="loginForm">
+            <div class="input-group">
+                <label>👤 Username</label>
+                <input type="text" id="username" placeholder="admin" required>
+            </div>
+            <div class="input-group">
+                <label>🔒 Password</label>
+                <input type="password" id="password" placeholder="••••••" required>
+            </div>
+            <button type="submit" class="login-btn">Login to Dashboard</button>
+            <div id="loginError" class="error-msg" style="display: none;">Invalid credentials! Use admin / admin123</div>
+        </form>
+        <div style="margin-top: 1rem; font-size: 0.7rem; color: #7f8c8d;">Demo: admin / admin123</div>
+    </div>
+</div>
+
+<!-- MAIN APPLICATION (hidden until login) -->
+<div id="appSection" style="display: none;">
+    <div class="app-container">
+        <div class="app-header">
+            <div>
+                <h1>📦 INVENTORY CONTROL</h1>
+                <div class="sub">MySQL Database | Real-time Stock Management</div>
+            </div>
+            <div class="user-info">
+                <span>👋 <span id="currentUser">Admin</span></span>
+                <button id="logoutBtnMain" class="logout-btn">🚪 Logout</button>
+            </div>
+        </div>
+
+        <div class="dashboard-grid">
+            <!-- LEFT: Add/Edit Product -->
+            <div class="card">
+                <h2>✏️ Manage Products</h2>
+                <form id="productForm">
+                    <input type="hidden" id="editId" value="">
+                    <div class="form-group">
+                        <label>Product Name *</label>
+                        <input type="text" id="prodName" placeholder="e.g., Wireless Headset" required>
+                    </div>
+                    <div class="form-group">
+                        <label>SKU (Unique)</label>
+                        <input type="text" id="prodSku" placeholder="SKU-1001" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Quantity (Stock)</label>
+                        <input type="number" id="prodQty" value="0" min="0" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Price (₹ / $)</label>
+                        <input type="number" id="prodPrice" step="0.01" value="0.00" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select id="prodCategory">
+                            <option value="Electronics">Electronics</option>
+                            <option value="Furniture">Furniture</option>
+                            <option value="Stationery">Stationery</option>
+                            <option value="Clothing">Clothing</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; gap: 12px; margin-top: 1rem;">
+                        <button type="submit" id="saveBtn">💾 Save Product</button>
+                        <button type="button" id="cancelEditBtn" class="btn-secondary" style="display: none;">Cancel</button>
+                    </div>
+                </form>
+                <div id="formMessage" class="message"></div>
+            </div>
+
+            <!-- RIGHT: Inventory Table -->
+            <div class="card">
+                <h2>📋 Current Stock Inventory</h2>
+                <div class="table-wrapper">
+                    <table id="inventoryTable">
+                        <thead>
+                            <tr><th>ID</th><th>Name</th><th>SKU</th><th>Stock</th><th>Price</th><th>Category</th><th>Actions</th></tr>
+                        </thead>
+                        <tbody id="inventoryBody">
+                            <tr><td colspan="7" style="text-align:center;">Loading inventory...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="total-summary">
+                    <span>📊 Total Products: <strong id="totalCount">0</strong></span>
+                    <span>💰 Total Value: <strong id="totalValue">₹0.00</strong></span>
+                </div>
+                <div style="margin-top: 1rem; display: flex; justify-content: flex-end;">
+                    <button id="refreshBtn" class="btn-secondary btn-sm">⟳ Refresh Data</button>
+                </div>
+            </div>
+        </div>
+        <div style="margin-top: 1rem; font-size:0.75rem; text-align:center; color:#4b6584;">
+            ✅ MySQL ready structure | Low stock warning: &lt; 5 units
+        </div>
+    </div>
+</div>
+
+<script>
+    // ==================== INVENTORY + MYSQL SIMULATION WITH LOGIN ====================
+    // For full MySQL deployment, set USE_REAL_BACKEND = true and adjust API_BASE.
+    // The system includes a login page (demo: admin/admin123) and full CRUD on inventory.
+    // Simulated MySQL storage via localStorage with proper schema.
+
+    const USE_REAL_BACKEND = false;   // set true if Node.js + MySQL backend available
+    const API_BASE = 'http://localhost:3000/api';
+    
+    // ----- AUTHENTICATION STATE -----
+    let isLoggedIn = false;
+    let currentUserName = "";
+
+    // ----- SIMULATED MySQL DATABASE (localStorage) -----
+    let simulatedProducts = [];
+    
+    function initSimulatedDB() {
+        const stored = localStorage.getItem('inventory_mysql_app');
+        if(stored) {
+            simulatedProducts = JSON.parse(stored);
+        } else {
+            simulatedProducts = [
+                { id: 101, name: "Gaming Mouse", sku: "MOU-G202", quantity: 32, price: 45.99, category: "Electronics" },
+                { id: 102, name: "Mechanical Keyboard", sku: "KEY-M87", quantity: 14, price: 89.50, category: "Electronics" },
+                { id: 103, name: "Office Chair", sku: "CHR-440", quantity: 4, price: 159.99, category: "Furniture" },
+                { id: 104, name: "A4 Notebook", sku: "NB-A422", quantity: 210, price: 1.99, category: "Stationery" },
+                { id: 105, name: "Cotton T-Shirt", sku: "TS-BLK", quantity: 7, price: 19.99, category: "Clothing" }
+            ];
+            saveToLocal();
+        }
+    }
+    function saveToLocal() { localStorage.setItem('inventory_mysql_app', JSON.stringify(simulatedProducts)); }
+    
+    // Simulated CRUD ops (like MySQL tables)
+    async function fetchAllSimulated() { return [...simulatedProducts]; }
+    async function addSimulated(product) {
+        const newId = simulatedProducts.length ? Math.max(...simulatedProducts.map(p=>p.id)) + 1 : 1001;
+        const newProd = { id: newId, ...product };
+        simulatedProducts.push(newProd);
+        saveToLocal();
+        return newProd;
+    }
+    async function updateSimulated(id, updated) {
+        const idx = simulatedProducts.findIndex(p => p.id == id);
+        if(idx === -1) throw new Error("Product not found");
+        simulatedProducts[idx] = { ...simulatedProducts[idx], ...updated, id: parseInt(id) };
+        saveToLocal();
+        return simulatedProducts[idx];
+    }
+    async function deleteSimulated(id) {
+        const lenBefore = simulatedProducts.length;
+        simulatedProducts = simulatedProducts.filter(p => p.id != id);
+        if(lenBefore === simulatedProducts.length) throw new Error("Delete failed");
+        saveToLocal();
+        return true;
+    }
+    
+    // Real MySQL endpoints (future ready)
+    async function realFetch() { const res = await fetch(`${API_BASE}/products`); return res.json(); }
+    async function realAdd(prod) { const res = await fetch(`${API_BASE}/products`, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(prod)}); return res.json(); }
+    async function realUpdate(id, prod) { const res = await fetch(`${API_BASE}/products/${id}`, { method:'PUT', headers:{'Content-Type':'application/json'}, body:JSON.stringify(prod)}); return res.json(); }
+    async function realDelete(id) { const res = await fetch(`${API_BASE}/products/${id}`, { method:'DELETE' }); return res.json(); }
+    
+    // Unified data layer
+    async function getAllProducts() { return USE_REAL_BACKEND ? await realFetch() : await fetchAllSimulated(); }
+    async function createProduct(prod) { return USE_REAL_BACKEND ? await realAdd(prod) : await addSimulated(prod); }
+    async function updateProduct(id, prod) { return USE_REAL_BACKEND ? await realUpdate(id, prod) : await updateSimulated(id, prod); }
+    async function deleteProduct(id) { return USE_REAL_BACKEND ? await realDelete(id) : await deleteSimulated(id); }
+    
+    // ----- UI Elements -----
+    const loginSection = document.getElementById('loginSection');
+    const appSection = document.getElementById('appSection');
+    const loginForm = document.getElementById('loginForm');
+    const loginErrorDiv = document.getElementById('loginError');
+    const logoutBtn = document.getElementById('logoutBtnMain');
+    const currentUserSpan = document.getElementById('currentUser');
+    
+    const inventoryBody = document.getElementById('inventoryBody');
+    const totalCountSpan = document.getElementById('totalCount');
+    const totalValueSpan = document.getElementById('totalValue');
+    const productForm = document.getElementById('productForm');
+    const editIdInput = document.getElementById('editId');
+    const prodName = document.getElementById('prodName');
+    const prodSku = document.getElementById('prodSku');
+    const prodQty = document.getElementById('prodQty');
+    const prodPrice = document.getElementById('prodPrice');
+    const prodCategory = document.getElementById('prodCategory');
+    const cancelEditBtn = document.getElementById('cancelEditBtn');
+    const formMessageDiv = document.getElementById('formMessage');
+    const refreshBtn = document.getElementById('refreshBtn');
+    const saveBtn = document.getElementById('saveBtn');
+    
+    function showMessage(msg, type) {
+        formMessageDiv.textContent = msg;
+        formMessageDiv.className = `message ${type}`;
+        setTimeout(() => { if(formMessageDiv) formMessageDiv.className = 'message'; }, 3000);
+    }
+    
+    function renderInventoryTable(products) {
+        if(!inventoryBody) return;
+        if(!products || products.length === 0) {
+            inventoryBody.innerHTML = '<tr><td colspan="7" style="text-align:center;">📭 No products. Add some!</td></tr>';
+            totalCountSpan.innerText = '0';
+            totalValueSpan.innerText = '₹0.00';
+            return;
+        }
+        let totalVal = 0;
+        const rows = products.map(prod => {
+            const stock = prod.quantity;
+            const priceVal = parseFloat(prod.price);
+            totalVal += stock * priceVal;
+            const lowClass = stock < 5 ? 'low-stock' : '';
+            return `
+                <tr>
+                    <td>${prod.id}</td>
+                    <td><strong>${escapeHtml(prod.name)}</strong></td>
+                    <td>${escapeHtml(prod.sku)}</td>
+                    <td><span class="stock-badge ${lowClass}">${stock} units</span> ${stock < 5 ? '⚠️' : ''}</td>
+                    <td>₹${priceVal.toFixed(2)}</td>
+                    <td>${escapeHtml(prod.category)}</td>
+                    <td class="action-icons">
+                        <button class="edit-btn" data-id="${prod.id}">✏️ Edit</button>
+                        <button class="delete-btn" data-id="${prod.id}">🗑️ Delete</button>
+                    </td>
+                </tr>
+            `;
+        }).join('');
+        inventoryBody.innerHTML = row
